@@ -1,9 +1,14 @@
 #include "raylib.h"
 #include "game.h"
 #include "colors.h"
+#include "block.h"
 
 #define HEIGHT 620
 #define WIDTH 500
+
+Block *currentBlock;
+Block *nextBlock;
+Block *holdBlock;
 
 void updateGame();
 void drawGame();
