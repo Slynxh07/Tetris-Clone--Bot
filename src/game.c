@@ -3,6 +3,7 @@
 #include "game.h"
 #include "colors.h"
 #include "block.h"
+#include <time.h>
 
 #define HEIGHT 620
 #define WIDTH 500
@@ -94,6 +95,8 @@ void drawGame()
     DrawRectangleRounded((Rectangle){ 320, 165, 170, 180 }, 0.3, 6, lightBlue);
     DrawRectangleRounded((Rectangle){ 320, 385, 170, 180 }, 0.3, 6, lightBlue);
 
+    drawBlock(currentBlock, 11, 11);
+
     EndDrawing();
 }
 
@@ -101,7 +104,7 @@ void initBlocks()
 {
     for (int i = 0; i < BAG_SIZE; i++)
     {
-        bag[i] = createBlock(i);
+        bag[i] = createBlock((BLOCK_TYPE)(i + 1));
     }
 }
 
@@ -110,7 +113,7 @@ void shuffle()
     for (int i = BAG_SIZE - 1; i > 0; i--) 
     {
         int j = rand() % (i + 1);
-        int tmp = bag[i];
+        Block *tmp = bag[i];
         bag[i] = bag[j];
         bag[j] = tmp;
     }
@@ -127,5 +130,5 @@ Block *getNextBlock()
         return retBlock;
     }
     initBlocks();
-    return getBlock();
+    return getNextBlock();
 }

@@ -11,8 +11,8 @@ typedef struct Grid
 
 Grid *createGrid();
 void destroyGrid(Grid *g);
-int isCellEmpty(Grid *g, int row, int col);
-int isCellOutside(Grid *g, int row, int col);
-int setCellValue(Grid *g, int row, int col, BLOCK_TYPE val);
+int isCellEmpty(const Grid *g, const int row, const int col);
+int isCellOutside(const Grid *g, const int row, const int col);
+int setCellValue(Grid *g, const int row, const int col, const int val);
 
 #endif

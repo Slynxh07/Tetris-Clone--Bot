@@ -18,23 +18,23 @@ typedef enum BLOCK_TYPE {
 } BLOCK_TYPE;
 
 typedef enum Direction {
-    UP,
     DOWN,
     RIGHT,
     LEFT
 } Direction;
 
-typedef struct Posistion
+typedef struct Position
 {
-    int x, y;
-} Posistion;
+    int row, col;
+} Position;
 
 Block *createBlock(BLOCK_TYPE blockType);
 void destroyBlock(Block *b);
-BLOCK_TYPE getBlockType(Block *b);
+BLOCK_TYPE getBlockType(const Block *b);
 void rotate(Block *b);
 void move(Block *b, Direction dir);
-int checkValidMove(Block *b, Direction dir, Grid *g);
-void lockBlock(Block *b, Grid *g);
+int checkValidMove(const Block *b, const Direction dir, const Grid *g);
+void lockBlock(const Block *b, Grid *g);
+void drawBlock(const Block *b, int xOffset, int yOffset);
 
 #endif
