@@ -122,6 +122,7 @@ void rotate(Block *b)
 
 void move(Block *b, Direction dir)
 {
+    printf("Called");
     switch (dir)
     {
         case DOWN:
@@ -138,6 +139,7 @@ void move(Block *b, Direction dir)
             exit(-1);
             break;
     }
+    printf("rowOffset: %d, colOffset: %d\n", b->rowOffset, b->colOffset);
 }
 
 void drawBlock(const Block *b, int xOffset, int yOffset)
@@ -163,16 +165,27 @@ void getCellPositions(const Block *b, Position out[NUM_CELLS])
 
 int checkValidMove(const Block *b, const Direction dir, const Grid *g)
 {
+    Position newPos[4];
+    getCellPositions(b, newPos);
     switch (dir)
     {
         case DOWN:
-            if (!isCellEmpty(g, b->rowOffset + 1, b->colOffset) && !isCellOutside(g, b->rowOffset + 1, b->colOffset)) return 0;
+            for (int i = 0; i < 4; i++)
+            {
+                if (isCellOutside(g, newPos[i].row + 1, newPos[i].col) || !isCellEmpty(g, newPos[i].row + 1, newPos[i].col)) return 0;
+            }    
             break;
         case LEFT:
-            if (!isCellEmpty(g, b->rowOffset, b->colOffset - 1) && !isCellOutside(g, b->rowOffset, b->colOffset - 1)) return 0;
+            for (int i = 0; i < 4; i++)
+            {
+                if (isCellOutside(g, newPos[i].row, newPos[i].col - 1) || !isCellEmpty(g, newPos[i].row, newPos[i].col - 1)) return 0;
+            }
             break;
         case RIGHT:
-            if (!isCellEmpty(g, b->rowOffset, b->colOffset + 1) && !isCellOutside(g, b->rowOffset + 1, b->colOffset + 1)) return 0;
+            for (int i = 0; i < 4; i++)
+            {
+                if (isCellOutside(g, newPos[i].row, newPos[i].col + 1) || !isCellEmpty(g, newPos[i].row, newPos[i].col + 1)) return 0;
+            }
             break;
     }
     return 1;
@@ -180,8 +193,10 @@ int checkValidMove(const Block *b, const Direction dir, const Grid *g)
 
 void lockBlock(const Block *b, Grid *g)
 {
-    if (setCellValue(g, b->rowOffset, b->colOffset, b->blockType))
+    Position newPos[4];
+    getCellPositions(b, newPos);
+    for (int i = 0; i < 4; i++)
     {
-        return;
+        setCellValue(g, newPos[i].row, newPos[i].col, b->blockType);
     }
 }

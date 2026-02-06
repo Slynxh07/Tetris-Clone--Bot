@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "raylib.h"
 #include "colors.h"
+#include <stdio.h>
 
 #define CELL_SIZE 30
 
@@ -25,7 +26,7 @@ void destroyGrid(Grid *g)
 
 int isCellEmpty(const Grid *g, const int row, const int col)
 {
-    return g->grid[row][col];
+    return g->grid[row][col] == 0;
 }
 
 int isCellOutside(const Grid *g, const int row, const int col)
@@ -45,9 +46,20 @@ void drawGrid(const Grid *g)
     }
 }
 
-int setCellValue(Grid *g, const int row, const int col, const int val)
+void printGrid(Grid *g)
 {
-    if (g->grid[row][col] == 0) return 0;
+    for (int i = 0; i < NUM_ROWS; i++)
+    {
+        for (int j = 0; j < NUM_COLS; j++)
+        {
+            printf("%d ", g->grid[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+void setCellValue(Grid *g, const int row, const int col, const int val)
+{
     g->grid[row][col] = val;
-    return 1;
+    printGrid(g);
 }

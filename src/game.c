@@ -62,7 +62,7 @@ void updateGame()
         case KEY_DOWN:
             if (checkValidMove(currentBlock, DOWN, grid))
             {
-                move(currentBlock, DOWN);  
+                move(currentBlock, DOWN);
             }
             else 
             {
