@@ -47,6 +47,50 @@ int isCellOutside(const int row, const int col)
     return 0;
 }
 
+int isRowFull(const Grid *g, int row)
+{
+    for (int i = 0; i < NUM_COLS; i++)
+    {
+        if (g->grid[row][i] == 0) return 0;
+    }
+    return 1;
+}
+
+void clearRow(Grid *g, int row)
+{
+    for (int i = 0; i < NUM_COLS; i++)
+    {
+        g->grid[row][i] = 0;
+    }
+}
+
+void moveRowDown(Grid *g, int row, int numRows)
+{
+	for (int i = 0; i < NUM_COLS; i++)
+	{
+		g->grid[row + numRows][i] = g->grid[row][i];
+		g->grid[row][i] = 0;
+	}
+}
+
+int clearFullRows(Grid *g)
+{
+    int clearRows = 0;
+	for (int i = NUM_ROWS - 1; i >= 0; i--)
+	{
+		if (isRowFull(g, i))
+		{
+			clearRow(g, i);
+			clearRows++;
+		}
+		else if (clearRows > 0)
+		{
+			moveRowDown(g, i, clearRows);
+		}
+	}
+	return clearRows;
+}
+
 void drawGrid(const Grid *g)
 {
     for (int i = 0; i < NUM_ROWS; i++)

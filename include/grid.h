@@ -15,5 +15,6 @@ void drawTGrid(const Grid *g);
 int isCellEmpty(const Grid *g, const int row, const int col);
 int isCellOutside(const int row, const int col);
 void setCellValue(Grid *g, const int row, const int col, const int val);
+int clearFullRows(Grid *g);
 
 #endif

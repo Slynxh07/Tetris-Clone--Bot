@@ -74,7 +74,7 @@ void closeGame()
 
 void updateGame()
 {
-    if (eventTriggered(0.5))
+    if (eventTriggered(1))
     {
         if (checkValidMove(currentBlock, DOWN, grid))
         {
@@ -177,4 +177,5 @@ void endMove()
     destroyBlock(currentBlock);
     currentBlock = nextBlock;
     nextBlock = getNextBlock();
+    int rowsCleared = clearFullRows(grid);
 }
