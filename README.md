@@ -8,5 +8,5 @@ mkdir build
 cd build
 cmake ..
 cmake --build .
-/Tetris
+./Tetris
 ```
