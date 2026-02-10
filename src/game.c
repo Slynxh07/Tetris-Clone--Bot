@@ -29,6 +29,7 @@ int b2bTetris;
 int level;
 int totalLinesCleared;
 Font font;
+Sound music;
 
 BLOCK_TYPE bag[BAG_SIZE];
 
@@ -57,8 +58,12 @@ int eventTriggered(double interval)
 void initGame()
 {
     InitWindow(WIDTH, HEIGHT, "Teris");
+    InitAudioDevice();
     SetTargetFPS(60);
     font = LoadFont("Assets/Font/monogram.ttf");
+    music = LoadSound("Assets/Sound/Music.wav");
+    SetSoundVolume(music, 0.5f);
+    PlaySound(music);
     srand(time(NULL));
     initBlocks();
     shuffle();
@@ -93,11 +98,17 @@ void closeGame()
     destroyBlock(ghostBlock);
     destroyGrid(grid);
     UnloadFont(font);
+    UnloadSound(music);
     CloseWindow();
 }
 
 void updateGame()
 {
+    if (!IsSoundPlaying(music))
+    {
+        PlaySound(music);
+    }
+
     keyPressed = GetKeyPressed();
     resetGhostBlockRow(ghostBlock, currentBlock);
     level = calcCurrentLevel(totalLinesCleared);
