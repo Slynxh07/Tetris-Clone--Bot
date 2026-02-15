@@ -47,7 +47,7 @@ Block *getNextBlock();
 void resetGame();
 void changeGhostBlock(BLOCK_TYPE t);
 int handleInput();
-void aiPlay(BLOCK_TYPE bt, Grid *g);
+void aiPlay(BLOCK_TYPE bt, BLOCK_TYPE nextBt, Grid *g);
 
 int eventTriggered(double interval)
 {
@@ -187,7 +187,6 @@ void updateGame()
                 if(!runAi)
                 {
                     runAi = 1;
-                    aiPlay(getBlockType(currentBlock), grid);
                 }
                 else runAi = 0;
                 break;
@@ -195,7 +194,7 @@ void updateGame()
 
         if (runAi)
         {
-            aiPlay(getBlockType(currentBlock), grid);
+            aiPlay(getBlockType(currentBlock), getBlockType(nextBlock) ,grid);
         }
 
         hardDrop(ghostBlock, grid);
@@ -205,6 +204,14 @@ void updateGame()
         if (input == KEY_ENTER)
         {
             resetGame();
+        } 
+        else if (input == KEY_A)
+        {
+            if(!runAi)
+            {
+                runAi = 1;
+            }
+            else runAi = 0;
         }
     }
 }
@@ -428,27 +435,62 @@ float scoreMove(Grid *g)
 {
     Grid tmp;
     memcpy(&tmp, g, sizeof(Grid));
-    float lineScore[5] = {0, 40, 100, 300, 1200};
-
+    
     int linesCleared = clearFullRows(&tmp);
+    
     int holes = countHoles(&tmp);
-    int maxHeight = getMaxHeight(&tmp);
+    //int maxHeight = getMaxHeight(&tmp);
     int bumpiness = getBumpiness(&tmp);
     int aggHeight = getAggHeight(&tmp);
-    int wells = getWells(&tmp);
 
-    float score = 0.0f;
-    score += lineScore[linesCleared];
+    //int wells = getWells(&tmp);
 
-    score -= holes * 45.0f;
-    score -= aggHeight * 2.0f;
-    score -= bumpiness * 4.0f;
-    score -= wells * 3.0f;
-
+    float score = -0.510066 * aggHeight +0.760666 * linesCleared -0.35663  * holes -0.184483 * bumpiness;
+    
     return score;
 }
 
-Move findBestMove(Block *block, Grid *g, int rotation)
+float scoreWithLookahead(Grid *g, BLOCK_TYPE nextType)
+{
+    Block *nextBase = createBlock(nextType);
+
+    float best = -1e9f;
+
+    for (int r = 0; r < 4; r++)
+    {
+        Block *b = cloneBlock(nextBase);
+
+        if (nextType == HERO && (r == 1 || r == 3)) move(b, DOWN);
+        for (int i = 0; i < r; i++) rotate(b);
+
+        while (checkValidMove(b, LEFT, g)) move(b, LEFT);
+
+        for (;;)
+        {
+            Grid copy;
+            memcpy(&copy, g, sizeof(Grid));
+
+            Block *sim = cloneBlock(b);
+            hardDrop(sim, &copy);
+            lockBlock(sim, &copy);
+
+            float s = scoreMove(&copy);
+            if (s > best) best = s;
+
+            destroyBlock(sim);
+
+            if (!checkValidMove(b, RIGHT, g)) break;
+            move(b, RIGHT);
+        }
+
+        destroyBlock(b);
+    }
+
+    destroyBlock(nextBase);
+    return best;
+}
+
+Move findBestMove(Block *block, Grid *g, int rotation, BLOCK_TYPE nextType)
 {
     Move bestMove = {0, 0, -1e9f};
     
@@ -468,7 +510,10 @@ Move findBestMove(Block *block, Grid *g, int rotation)
         Move currMove;
         currMove.colOffset = getColOffset(block);
         currMove.numRotations = rotation;
-        currMove.score = scoreMove(&copy);
+        float immediate = scoreMove(&copy);
+        float future = scoreWithLookahead(&copy, nextType);
+
+        currMove.score = immediate + future * 0.7f;
 
         if (currMove.score > bestMove.score) bestMove = currMove;
 
@@ -482,7 +527,7 @@ Move findBestMove(Block *block, Grid *g, int rotation)
     return bestMove;
 }
 
-void aiPlay(BLOCK_TYPE bt, Grid *g)
+void aiPlay(BLOCK_TYPE bt, BLOCK_TYPE nextBt, Grid *g)
 {
     Block *base = createBlock(bt);
 
@@ -494,7 +539,7 @@ void aiPlay(BLOCK_TYPE bt, Grid *g)
         if (bt == HERO && (r == 1 || r == 3)) move(b, DOWN);
         for (int i = 0; i < r; i++) rotate(b);
 
-        Move m = findBestMove(b, g, r);
+        Move m = findBestMove(b, g, r, nextBt);
         if (m.score > bestMove.score) bestMove = m;
 
         destroyBlock(b);
@@ -503,7 +548,7 @@ void aiPlay(BLOCK_TYPE bt, Grid *g)
     if (bt == HERO && (bestMove.numRotations == 1 || bestMove.numRotations == 3)) move(currentBlock, DOWN);
     for (int i = 0; i < bestMove.numRotations; i++) rotate(currentBlock);
 
-    if (bestMove.colOffset > 0)
+    if (bestMove.colOffset > getColOffset(currentBlock))
     {
         while (getColOffset(currentBlock) != bestMove.colOffset && checkValidMove(currentBlock, RIGHT, g)) move(currentBlock, RIGHT);
     }
@@ -514,6 +559,6 @@ void aiPlay(BLOCK_TYPE bt, Grid *g)
 
     updateScore(0, hardDrop(currentBlock, g) * 2);
     endMove();
-
+    
     destroyBlock(base);
 }

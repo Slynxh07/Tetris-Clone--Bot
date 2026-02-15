@@ -24,16 +24,28 @@ void destroyGrid(Grid *g)
     if (g != NULL) free(g);
 }
 
+void printGrid(const Grid *g)
+{
+    for (int row = 0; row < NUM_ROWS; row++)
+    {
+        for (int col = 0; col < NUM_COLS; col++)
+        {
+            printf("%d ", g->grid[row][col]);
+        }
+        printf("\n");
+    }
+}
+
 void drawTGrid(const Grid *g)
 {
-	for (int row = 0; row < NUM_ROWS; row++)
-	{
-		for (int col = 0; col < NUM_COLS; col++)
-		{
-			int cellValue = g->grid[row][col];
-			DrawRectangle(col * CELL_SIZE + 11, row * CELL_SIZE + 11, CELL_SIZE - 1, CELL_SIZE - 1, brickColors[cellValue]);
-		}
-	}
+    for (int row = 0; row < NUM_ROWS; row++)
+    {
+        for (int col = 0; col < NUM_COLS; col++)
+        {
+            int cellValue = g->grid[row][col];
+            DrawRectangle(col * CELL_SIZE + 11, row * CELL_SIZE + 11, CELL_SIZE - 1, CELL_SIZE - 1, brickColors[cellValue]);
+        }
+    }
 }
 
 int isCellEmpty(const Grid *g, const int row, const int col)
