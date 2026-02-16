@@ -47,7 +47,7 @@ Block *getNextBlock();
 void resetGame();
 void changeGhostBlock(BLOCK_TYPE t);
 int handleInput();
-void aiPlay(BLOCK_TYPE bt, BLOCK_TYPE nextBt, Grid *g);
+void aiPlay(BLOCK_TYPE bt, BLOCK_TYPE nextBt, BLOCK_TYPE holdBt, Grid *g);
 
 int eventTriggered(double interval)
 {
@@ -184,17 +184,14 @@ void updateGame()
                 if(canHold) hold();
                 break;
             case KEY_A:
-                if(!runAi)
-                {
-                    runAi = 1;
-                }
-                else runAi = 0;
+                runAi = !runAi;
                 break;
         }
 
         if (runAi)
         {
-            aiPlay(getBlockType(currentBlock), getBlockType(nextBlock) ,grid);
+            if (holding) aiPlay(getBlockType(currentBlock), getBlockType(nextBlock), getBlockType(holdBlock) ,grid);
+            else aiPlay(getBlockType(currentBlock), getBlockType(nextBlock), 0 ,grid);
         }
 
         hardDrop(ghostBlock, grid);
@@ -207,11 +204,7 @@ void updateGame()
         } 
         else if (input == KEY_A)
         {
-            if(!runAi)
-            {
-                runAi = 1;
-            }
-            else runAi = 0;
+            runAi = !runAi;
         }
     }
 }
@@ -427,7 +420,7 @@ int handleInput()
 }
 
 typedef struct Move {
-    int colOffset, numRotations;
+    int colOffset, numRotations, hold;
     float score;
 } Move;
 
@@ -490,9 +483,9 @@ float scoreWithLookahead(Grid *g, BLOCK_TYPE nextType)
     return best;
 }
 
-Move findBestMove(Block *block, Grid *g, int rotation, BLOCK_TYPE nextType)
+Move findBestMove(Block *block, Grid *g, int rotation, BLOCK_TYPE nextType, int hold)
 {
-    Move bestMove = {0, 0, -1e9f};
+    Move bestMove = {0, 0, 0, -1e9f};
     
     Grid copy;
 
@@ -524,14 +517,16 @@ Move findBestMove(Block *block, Grid *g, int rotation, BLOCK_TYPE nextType)
         move(block, RIGHT);
     }
 
+    bestMove.hold = hold;
+
     return bestMove;
 }
 
-void aiPlay(BLOCK_TYPE bt, BLOCK_TYPE nextBt, Grid *g)
+void aiPlay(BLOCK_TYPE bt, BLOCK_TYPE nextBt, BLOCK_TYPE holdBt, Grid *g)
 {
     Block *base = createBlock(bt);
 
-    Move bestMove = {0, 0, -1e9f};
+    Move bestMove = {0, 0, 0, -1e9f};
 
     for (int r = 0; r < 4; r++)
     {
@@ -539,13 +534,38 @@ void aiPlay(BLOCK_TYPE bt, BLOCK_TYPE nextBt, Grid *g)
         if (bt == HERO && (r == 1 || r == 3)) move(b, DOWN);
         for (int i = 0; i < r; i++) rotate(b);
 
-        Move m = findBestMove(b, g, r, nextBt);
+        Move m = findBestMove(b, g, r, nextBt, 0);
         if (m.score > bestMove.score) bestMove = m;
 
         destroyBlock(b);
     }
 
-    if (bt == HERO && (bestMove.numRotations == 1 || bestMove.numRotations == 3)) move(currentBlock, DOWN);
+    if (canHold)
+    {
+        BLOCK_TYPE pieceAfterHold;
+
+        if (holding) pieceAfterHold = holdBt;
+        else pieceAfterHold = nextBt;
+
+        Block *holdBase = createBlock(pieceAfterHold);
+
+        for (int r = 0; r < 4; r++)
+        {
+            Block *b = cloneBlock(holdBase);
+            if (pieceAfterHold == HERO && (r == 1 || r == 3)) move(b, DOWN);
+            for (int i = 0; i < r; i++) rotate(b);
+
+            Move m = findBestMove(b, g, r, nextBt, 1);
+            if (m.score > bestMove.score) bestMove = m;
+
+            destroyBlock(b);
+        }
+        destroyBlock(holdBase);
+    }
+
+    if (bestMove.hold) hold();
+
+    if (getBlockType(currentBlock) == HERO && (bestMove.numRotations == 1 || bestMove.numRotations == 3)) move(currentBlock, DOWN);
     for (int i = 0; i < bestMove.numRotations; i++) rotate(currentBlock);
 
     if (bestMove.colOffset > getColOffset(currentBlock))
